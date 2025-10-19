@@ -1,0 +1,275 @@
+/* ===========================
+   Monitoreo Ambiental TEC San Carlos
+   Hoja de estilos responsive (completa)
+   =========================== */
+
+/* --------- Variables --------- */
+:root{
+  --brand:#06132f;   /* color de fondo + header */
+  --text:#ffffff;    /* texto sobre fondo oscuro */
+  --muted:#b3c0ff;   /* acento sutil */
+  --surface:rgba(255,255,255,0.04);
+  --border:rgba(255,255,255,0.08);
+}
+
+/* --------- Reset & Base --------- */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+  color:var(--text);
+  background:var(--brand);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+img,svg,video{ max-width:100%; height:auto; display:block; }
+a{ color:inherit; text-decoration:none; }
+
+/* Foco accesible */
+:focus-visible{
+  outline:2px solid rgba(179,192,255,.65);
+  outline-offset:2px;
+}
+
+/* --------- Encabezado (sticky) --------- */
+header.site-header{
+  position:sticky;
+  top:0;
+  z-index:1000;
+  background:var(--brand);
+  box-shadow: 0 6px 20px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,0.02) inset;
+  backdrop-filter: saturate(120%);
+}
+.header-inner{
+  max-width:min(2000px, 92vw);
+  margin:0 auto;
+  padding:14px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.brand{
+  display:flex;
+  align-items:left;
+  gap:10px;
+  min-width:0;
+}
+.brand__title{
+  margin:0;
+  font-size:clamp(1.05rem, 0.9rem + 1vw, 1.5rem);
+  font-weight:700;
+  letter-spacing:.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+
+}
+
+/* Botón "Consultar clima" */
+.cta{
+  --ring: 2px solid rgba(179, 192, 255, 0.45);
+  border:none;
+  border-radius:12px;
+  padding:10px 16px;
+  background:transparent;
+  color:var(--text);
+  font-weight:600;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  transition:transform .08s ease, box-shadow .2s ease, background .2s ease;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.15) inset,
+              0 6px 14px rgba(0,0,0,.35);
+}
+.cta:hover{
+  background: rgba(255,255,255,0.06);
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.22) inset,
+              0 10px 18px rgba(0,0,0,.45);
+}
+.cta:active{ transform: translateY(0); }
+.cta:focus-visible{ outline: var(--ring); }
+
+/* Ajustes header en pantallas pequeñas */
+@media (max-width: 520px){
+  .header-inner{ padding:12px 14px; gap:8px; }
+  .brand__title{ font-size:1rem; }
+  .cta{ padding:8px 12px; }
+}
+
+/* --------- Contenido --------- */
+main{
+  max-width: min(2500px, 100vw);   /* ocupa la mayor parte de la pantalla */
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+/* Tarjeta base */
+.card{
+  background: var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:22px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+/* --------- KPI Grid (tarjetas) --------- */
+/* Grid centrado que usa casi todo el ancho disponible */
+.kpi-grid{
+  display:grid;
+  gap:28px;
+}
+.kpi-centered{
+  width:100%;
+  max-width:min(1400px, 92vw);
+  margin:0 auto;
+  padding-inline:8px;
+  grid-template-columns: repeat(3, 1fr); /* 3 columnas uniformes */
+  align-items:stretch;
+  justify-content:center;
+}
+
+/* Tarjetas un poco más grandes */
+.card--kpi{
+  min-height: 340px;  /* altura ligeramente mayor */
+  padding: 30px;
+  display:flex;
+  flex-direction:column;
+}
+.card--kpi h2{
+  font-size:1.3rem;
+  margin:0 0 8px 0;
+}
+.card--kpi p{ margin:8px 0; }
+
+/* --------- Responsivo --------- */
+@media (max-width: 900px){
+  .kpi-centered{
+    grid-template-columns: repeat(2, 1fr);
+    max-width:min(1100px, 95vw);
+  }
+}
+@media (max-width: 640px){
+  .kpi-centered{
+    grid-template-columns: 1fr;
+    max-width:95vw;
+  }
+}
+
+/* --------- Utilidades --------- */
+.center{ display:grid; place-items:center; }
+.mt-0{ margin-top:0 !important; }
+.hidden{ display:none !important; }
+
+/* --------- Accesibilidad motion --------- */
+@media (prefers-reduced-motion: reduce){
+  *{
+    animation-duration:0.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.01ms !important;
+    scroll-behavior:auto !important;
+  }
+}
+
+/* --------- Selección de texto --------- */
+::selection{
+  background: rgba(179,192,255,.35);
+  color: var(--text);
+}
+
+/* ===========================
+   TARJETA: TEMPERATURA
+   (usar junto con la estructura HTML que ya tienes)
+   =========================== */
+
+/* Color del “mercurio” del termómetro (se actualiza por JS con --thermo-color) */
+.kpi-temp{
+  --thermo-color:#4fc3f7;
+}
+
+/* Layout interno: termómetro + visual de clima/lectura */
+.kpi-temp .temp-content{
+  display:grid;
+  grid-template-columns: 100px 1fr; /* más espacio para icono/lectura */
+  gap: 28px;
+  align-items:center;
+}
+
+/* -------- Termómetro -------- */
+.thermo{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  min-width:90px;
+}
+
+/* SVG del termómetro: alto mayor para presencia visual */
+.thermo-svg{
+  width:100%;
+  max-width:115px;  /* controla el ancho máximo del termómetro */
+  height:280px;    /* fuerza altura en la celda */
+  filter: drop-shadow(0 8px 18px rgba(0,0,0,.35));
+}
+
+/* Relleno del tubo (altura y posición animadas) */
+#thermo-fill{
+  transition: y .5s ease, height .5s ease, fill .3s ease;
+}
+
+/* Bulbo cambia de color con la temp */
+#thermo-bulb{
+  transition: fill .3s ease;
+}
+
+/* -------- Visual del clima + lectura -------- */
+.weather-visual{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:8px;
+}
+
+/* Icono del estado del clima: más grande */
+.weather-icon{
+  width:140px;
+  height:128px;
+  display:grid;
+  place-items:center;
+  margin-top: 35px;
+}
+
+/* Lectura de temperatura: protagonista */
+.temp-readout{
+  font-size: clamp(1rem, 1.2rem + 2.0vw, 3rem);
+  font-weight: 900;
+  line-height: 1.1;
+  margin-top: 10px;
+  letter-spacing:.2px;
+}
+
+/* Texto de condición (Soleado, Lluvia, etc.) */
+.condition-label{
+  font-size: 1rem;
+  font-weight:600;
+  color: rgba(255,255,255,.9);
+}
+
+/* -------- Responsive -------- */
+@media (max-width: 520px){
+  .kpi-temp .temp-content{
+    grid-template-columns: 84px 1fr; /* un poco menos ancho para el termómetro */
+    gap: 18px;
+  }
+  .weather-icon{
+    width:108px;
+    height:108px;
+  }
+  .temp-readout{
+    font-size: clamp(1.8rem, 1.2rem + 2vw, 2.4rem);
+  }
+}

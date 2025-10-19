@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Monitoreo Ambiental TEC San Carlos</title>
+<link rel="stylesheet" href="CSS/style.css">
+</head>
+<body>
+    <!-- Encabezado fijo -->
+    <header class="site-header" role="banner">
+        <div class="header-inner">
+            <div class="brand">
+                <h1 class="brand__title" aria-label="Título del sitio">
+                    Monitoreo Ambiental TEC San Carlos
+                </h1>
+            </div>
+
+        <!-- Botón a otra pantalla: cambia el href a tu ruta real -->
+            <a class="cta" href="Consultar.html" aria-label="Ir a pantalla de consulta del clima">
+                Consultar clima
+                <!-- ícono flecha minimalista -->
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M5 12h12M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <!-- Contenido de ejemplo -->
+    <main role="main">
+        <section class="kpi-grid kpi-centered">
+            <!-- TARJETA: TEMPERATURA -->
+            <div class="card card--kpi kpi-temp" id="card-temp">
+                <h2 class="mt-0">🌡️ Temperatura</h2>
+                <div class="temp-content">
+                    <!-- Termómetro -->
+                    <div class="thermo" aria-label="Termómetro">
+                        <svg viewBox="0 0 80 220" class="thermo-svg" role="img" aria-hidden="true">
+                            <!-- Tubo -->
+                            <rect x="34" y="20" width="12" height="160" rx="6" fill="rgba(255,255,255,0.12)" />
+                            <rect x="36" y="22" width="8" height="156" rx="4" fill="rgba(255,255,255,0.18)" />
+                            <!-- Bulbo -->
+                            <circle cx="40" cy="200" r="20" fill="rgba(255,255,255,0.12)"/>
+                            <circle cx="40" cy="200" r="16" fill="rgba(255,255,255,0.18)"/>
+
+                            <!-- MERCURIO (se ajusta con JS) -->
+                            <defs>
+                                <clipPath id="tube-clip">
+                                    <rect x="36" y="22" width="8" height="156" rx="4"/>
+                                </clipPath>
+                            </defs>
+                            <g clip-path="url(#tube-clip)">
+                                <rect id="thermo-fill" x="36" y="178" width="8" height="0" fill="var(--thermo-color)"/>
+                            </g>
+                            <circle id="thermo-bulb" cx="40" cy="200" r="14" fill="var(--thermo-color)"/>
+                        </svg>
+                    </div>
+                    <!-- Visual del clima + lectura -->
+                    <div class="weather-visual">
+                        <div id="weather-icon" class="weather-icon" aria-hidden="true"></div>
+                        <div id="temp-readout" class="temp-readout" aria-live="polite">— °C</div>
+                        <div id="condition-label" class="condition-label">—</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card card--kpi">
+                <h2 class="mt-0">💧 Humedad</h2>
+                <p>Observa la humedad relativa y su relación con la temperatura para condiciones de confort.</p>
+                <p>Accede a consultas y gráficos desde <strong>“Consultar clima”</strong>.</p>
+            </div>
+
+            <div class="card card--kpi">
+                <h2 class="mt-0">🌞 Radiación UV</h2>
+                <p>Revisa la intensidad de radiación UV y patrones diarios para recomendaciones de exposición.</p>
+                <p>Consulta promedios, picos y comparaciones en <strong>“Consultar clima”</strong>.</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="JS/Main.js" defer></script>
+</body>
+</html>
