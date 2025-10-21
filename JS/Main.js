@@ -116,10 +116,10 @@ function nudge(el, cls, ms = 280) {
   };
 })();
 
-updateTemperature(22, 'tormenta'); // °C y condición
+updateTemperature(10, 'nieve'); // °C y condición
 
 /* =====================
-   HUMEDAD (gota)
+  HUMEDAD (gota)
    ===================== */
 (function () {
   const fill = document.getElementById('hum-fill');
@@ -170,7 +170,7 @@ updateTemperature(22, 'tormenta'); // °C y condición
   window.updateHumidity = renderHumidity;
 })();
 
-updateHumidity(100);             
+updateHumidity(100);
 
 /* ====== RADIACIÓN UV: lógica (Sol pulsante + lista de tips) ====== */
 (function () {
@@ -253,3 +253,295 @@ updateHumidity(100);
   // Ejemplo inicial (ajusta o elimina)
   renderUV(6);
 })();
+
+/* ================================
+   Calendario semanal (week.js)
+   ================================ */
+
+const weekData = [
+  { date: '2025-10-20', state: 'Soleado', tmax: 28, tmin: 19, hum: 62, uv: 6 },
+  { date: '2025-10-21', state: 'Parcialmente nublado', tmax: 27, tmin: 18, hum: 65, uv: 5 },
+  { date: '2025-10-22', state: 'Lluvia', tmax: 24, tmin: 17, hum: 82, uv: 3 },
+  { date: '2025-10-23', state: 'Tormenta', tmax: 23, tmin: 16, hum: 85, uv: 2 },
+  { date: '2025-10-24', state: 'Nublado', tmax: 25, tmin: 18, hum: 70, uv: 4 },
+  { date: '2025-10-25', state: 'Soleado', tmax: 29, tmin: 20, hum: 58, uv: 7 },
+  { date: '2025-10-26', state: 'Nieve', tmax: 5, tmin: -1, hum: 60, uv: 1 },
+];
+
+/* ---- Config y utilidades de formato ---- */
+const dtfDay = new Intl.DateTimeFormat('es-ES', { weekday: 'long' });
+const dtfDate = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short' });
+
+function toLocalDate(iso) {
+  // ISO "YYYY-MM-DD" -> Date local a medianoche (sin problemas de TZ)
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d, 0, 0, 0, 0);
+}
+
+function dayNameEs(d) {
+  const name = dtfDay.format(d); // ej. "miércoles"
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+function fmtFecha(iso) {
+  const d = toLocalDate(iso);
+  // ej. "20 oct." -> quitar punto y capitalizar primera letra
+  let out = dtfDate.format(d).replace(/\.$/, '');
+  return out.replace(/\b\p{L}/u, m => m.toUpperCase());
+}
+
+function esHoyISO(iso) {
+  const t = new Date();
+  const d = toLocalDate(iso);
+  return d.getFullYear() === t.getFullYear() &&
+    d.getMonth() === t.getMonth() &&
+    d.getDate() === t.getDate();
+}
+
+/* ---- Icono por estado (emojis para cero dependencias) ---- */
+function iconoPorEstado(state) {
+  const s = (state || '').toLowerCase();
+  if (s.includes('tormenta')) return '⛈️';
+  if (s.includes('lluv')) return '🌧️';
+  if (s.includes('nieve')) return '❄️';
+  if (s.includes('nublado') && s.includes('parcial')) return '⛅';
+  if (s.includes('nublado')) return '☁️';
+  if (s.includes('niebla') || s.includes('bruma')) return '🌫️';
+  if (s.includes('sole')) return '☀️';
+  return '🌤️';
+}
+
+/* ---- Resaltado de UV (opcional) ---- */
+function uvSeverity(uv) {
+  const u = Number(uv) || 0;
+  if (u < 3) return 'uv-low';
+  if (u < 6) return 'uv-mod';
+  if (u < 8) return 'uv-high';
+  if (u < 10) return 'uv-very';
+  return 'uv-ext';
+}
+
+/* ---- Render principal ----
+   data: [{ date:'YYYY-MM-DD', state:'Soleado', tmax:28, tmin:19, hum:62, uv:6 }, ...]
+   opts.containerId: id del grid (por defecto 'week-grid')
+   opts.autoscrollToday: boolean (móvil con scroll horizontal)
+---------------------------------------- */
+function renderWeek(data, opts = {}) {
+  const { containerId = 'week-grid', autoscrollToday = true } = opts;
+  const grid = document.getElementById(containerId);
+  if (!grid) return;
+
+  grid.innerHTML = '';
+
+  (data || []).forEach(item => {
+    const d = toLocalDate(item.date);
+    const isToday = esHoyISO(item.date);
+
+    const dayName = isToday ? 'Hoy' : dayNameEs(d);
+    const dayDate = fmtFecha(item.date);
+    const icon = iconoPorEstado(item.state);
+    const uvClass = uvSeverity(item.uv);
+
+    const el = document.createElement('article');
+    el.className = 'day' + (isToday ? ' is-today' : '');
+
+    el.innerHTML = `
+      <header class="day-header">
+        <span class="day-name">${dayName}</span>
+        <span class="day-date">${dayDate}</span>
+      </header>
+      <div class="day-divider"></div>
+      <div class="day-body">
+        <div class="day-state">
+          <span class="state-icon" aria-hidden="true">${icon}</span>
+          <span class="state-label">${item.state || '—'}</span>
+        </div>
+        <div class="metrics">
+          <div class="metric"><span>Máx</span><strong>${Math.round(item.tmax)}°C</strong></div>
+          <div class="metric"><span>Mín</span><strong>${Math.round(item.tmin)}°C</strong></div>
+          <div class="metric"><span>Humedad</span><strong>${Math.round(item.hum)}%</strong></div>
+          <div class="metric ${uvClass}"><span>UV</span><strong>${Number(item.uv).toString()}</strong></div>
+        </div>
+      </div>
+    `;
+    grid.appendChild(el);
+  });
+
+  // Auto-scroll a “Hoy” si hay carrusel horizontal (en móvil)
+  if (autoscrollToday) {
+    const todayCard = grid.querySelector('.day.is-today');
+    const canScroll = grid.scrollWidth > grid.clientWidth;
+    if (todayCard && canScroll) {
+      todayCard.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }
+}
+
+/* ---- API mínima para integrar con tu app ---- */
+function setWeekData(data, opts) {
+  renderWeek(data, opts);
+}
+
+/* ---- Demo opcional ---- */
+const demoWeekData = [
+  { date: '2025-10-20', state: 'Soleado', tmax: 28, tmin: 19, hum: 62, uv: 6 },
+  { date: '2025-10-21', state: 'Parcialmente nublado', tmax: 27, tmin: 18, hum: 65, uv: 5 },
+  { date: '2025-10-22', state: 'Lluvia', tmax: 24, tmin: 17, hum: 82, uv: 3 },
+  { date: '2025-10-23', state: 'Tormenta', tmax: 23, tmin: 16, hum: 85, uv: 2 },
+  { date: '2025-10-24', state: 'Nublado', tmax: 25, tmin: 18, hum: 70, uv: 4 },
+  { date: '2025-10-25', state: 'Soleado', tmax: 29, tmin: 20, hum: 58, uv: 7 },
+  { date: '2025-10-26', state: 'Nieve', tmax: 5, tmin: -1, hum: 60, uv: 1 },
+];
+
+// Descomenta para ver demo inmediata:
+// renderWeek(demoWeekData);
+
+/* ---- Expone en window ---- */
+window.renderWeek = renderWeek;
+window.setWeekData = setWeekData;
+
+renderWeek(weekData);
+
+/* =========================
+   Calendario mensual (month)
+   ========================= */
+
+/* ==== Utilidades de fecha ==== */
+const DTF_MONTH = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' });
+const DTF_DOW   = new Intl.DateTimeFormat('es-ES', { weekday: 'short' }); // lun., mar., ...
+const DTF_DAY   = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short' });
+
+function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+function daysInMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0).getDate(); }
+function toISO(d){ return d.toISOString().slice(0,10); }
+function esHoy(d){ const t=new Date(); return d.getFullYear()==t.getFullYear()&&d.getMonth()==t.getMonth()&&d.getDate()==t.getDate(); }
+
+function dowShort(d){
+  // Intl da "lun.", quitamos punto y capitalizamos
+  return DTF_DOW.format(d).replace(/\.$/,'').replace(/^\p{L}/u, m=>m.toUpperCase());
+}
+function dateLabel(d){
+  return DTF_DAY.format(d).replace(/\.$/,'').replace(/^\p{L}/u, m=>m.toUpperCase());
+}
+
+/* ==== Icono por estado ==== */
+function iconoPorEstado(state) {
+  const s = (state || '').toLowerCase();
+  if (s.includes('tormenta')) return '⛈️';
+  if (s.includes('lluv'))     return '🌧️';
+  if (s.includes('nieve'))    return '❄️';
+  if (s.includes('nublado') && s.includes('parcial')) return '⛅';
+  if (s.includes('nublado'))  return '☁️';
+  if (s.includes('niebla') || s.includes('bruma')) return '🌫️';
+  if (s.includes('sole'))     return '☀️';
+  return '🌤️';
+}
+
+/* ==== Render mensual ====
+   monthDate: Date dentro del mes a dibujar
+   data: [{ date:'YYYY-MM-DD', t: 24, state:'Soleado' }, ...]
+*/
+function renderMonthCalendar(monthDate, data=[]) {
+  const grid  = document.getElementById('month-grid');
+  const title = document.getElementById('month-title');
+  if (!grid || !title) return;
+
+  const month = startOfMonth(monthDate);
+  const days  = daysInMonth(month);
+  title.textContent = `Pronóstico del mes · ${DTF_MONTH.format(month).replace(/^\p{L}/u,m=>m.toUpperCase())}`;
+
+  // Índice rápido por fecha ISO
+  const map = new Map((data||[]).map(d => [d.date, d]));
+
+  grid.innerHTML = '';
+
+  // Offset para que el mes empiece en Lunes (1..7)
+  let offset = month.getDay(); // 0=Dom ... 6=Sab
+  offset = (offset === 0) ? 6 : offset - 1;
+
+  // Relleno antes del día 1
+  for (let i=0;i<offset;i++) {
+    const placeholder = document.createElement('div');
+    placeholder.className = 'mday empty';
+    placeholder.setAttribute('aria-hidden','true');
+    grid.appendChild(placeholder);
+  }
+
+  // Celdas de los días
+  for (let d=1; d<=days; d++) {
+    const date = new Date(month.getFullYear(), month.getMonth(), d);
+    const iso  = toISO(date);
+    const rec  = map.get(iso);
+
+    const el = document.createElement('article');
+    el.className = 'mday' + (esHoy(date) ? ' today':'') + (!rec ? ' empty':'');
+
+    const dow  = dowShort(date);
+    const lab  = dateLabel(date);
+    const icon = iconoPorEstado(rec?.state);
+    const temp = (rec?.t != null) ? `${Math.round(rec.t)}°C` : '—';
+    const state= rec?.state || 'Sin datos';
+
+    el.innerHTML = `
+      <header class="mday-head">
+        <span class="mday-dow">${dow}</span>
+        <span class="mday-date">${lab}</span>
+      </header>
+      <div class="mday-body">
+        <div class="mday-state"><span class="mday-icon">${icon}</span><span>${state}</span></div>
+        <div class="mday-temp"><span>Temp</span><strong>${temp}</strong></div>
+      </div>
+    `;
+    grid.appendChild(el);
+  }
+}
+
+/* ==== Navegación ==== */
+let currentMonth = new Date(); // mes actual mostrado
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+
+btnPrev?.addEventListener('click', () => {
+  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()-1, 1);
+  renderMonthCalendar(currentMonth, monthData);
+});
+btnNext?.addEventListener('click', () => {
+  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1, 1);
+  renderMonthCalendar(currentMonth, monthData);
+});
+
+/* ==== API pública para que tu app pase datos reales ==== */
+function setMonthData(data){
+  // data: [{date:'YYYY-MM-DD', t:Number, state:String}, ...]
+  renderMonthCalendar(currentMonth, data);
+}
+window.setMonthData = setMonthData;
+
+/* ==== Demo local (puedes borrar o reemplazar) ==== */
+const monthData = (() => {
+  const base = startOfMonth(new Date());
+  const mk = (d, t, s) => ({
+    date: new Date(base.getFullYear(), base.getMonth(), d).toISOString().slice(0,10),
+    t, state: s
+  });
+  return [
+    mk(1,  26, 'Soleado'),
+    mk(2,  24, 'Parcialmente nublado'),
+    mk(3,  22, 'Lluvia'),
+    mk(5,  23, 'Nublado'),
+    mk(7,  21, 'Lluvia'),
+    mk(9,  25, 'Soleado'),
+    mk(12, 27, 'Soleado'),
+    mk(14, 19, 'Niebla'),
+    mk(16, 18, 'Lluvia'),
+    mk(18, 17, 'Tormenta'),
+    mk(20, 22, 'Parcialmente nublado'),
+    mk(22, 23, 'Nublado'),
+    mk(24, 28, 'Soleado'),
+    mk(26,  5, 'Nieve'),
+    mk(28, 29, 'Soleado'),
+  ];
+})();
+
+/* Render inicial */
+renderMonthCalendar(currentMonth, monthData);
